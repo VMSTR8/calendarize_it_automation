@@ -23,3 +23,5 @@ XPATH_PUBLISH_BUTTON = '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div
 
 XPATH_PUBLISH_SUBMIT_BUTTON = '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/div[1]/div/div[1]/div[' \
                               '2]/div[3]/div/div/div/div[1]/div[1]/button '
+
+XPATH_COLOR_TAB = '/html/body/div[7]/div[2]/div[1]/div/ul/li[2]/a'
