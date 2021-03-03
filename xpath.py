@@ -17,3 +17,9 @@ XPATH_IMG_LINK = '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/d
 
 XPATH_DESCRIPTION_LINK = '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/div[1]/div/div[1]/div[2]/div[' \
                          '2]/div/div[3]/div[7]/h2/button '
+
+XPATH_PUBLISH_BUTTON = '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/div[1]/div/div[1]/div[' \
+                       '1]/div/div[2]/button[2] '
+
+XPATH_PUBLISH_SUBMIT_BUTTON = '/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/div[1]/div/div[1]/div[' \
+                              '2]/div[3]/div/div/div/div[1]/div[1]/button '
