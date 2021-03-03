@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
 
 from transliterate import translit
 
@@ -48,9 +49,12 @@ class AddNewEvent(RedDawnSite):
     def expand_and_add_taxonomy(self, permanent_link, organization, description):
         # Постоянная ссылка
         self.wait.until(EC.presence_of_element_located((By.XPATH, XPATH_ENTIRE_EVENT_BLOCK)))
-        self.driver.find_element_by_xpath(XPATH_PERMANENT_LINK).click()
+        try:
+            self.driver.find_element_by_class_name('components-text-control__input').click()
+        except NoSuchElementException:
+            self.driver.find_element_by_xpath(XPATH_PERMANENT_LINK).click()
+            self.driver.find_element_by_class_name('components-text-control__input').click()
 
-        self.driver.find_element_by_class_name('components-text-control__input').click()
         self.driver.find_element_by_class_name('components-text-control__input').send_keys(Keys.CONTROL, 'a')
         self.driver.find_element_by_class_name('components-text-control__input').send_keys(Keys.DELETE)
 
@@ -59,21 +63,29 @@ class AddNewEvent(RedDawnSite):
         print('Add permanent link: done.')
 
         # Организаторы
-        self.driver.find_element_by_xpath(XPATH_ORGANIZATION_LINK).click()
+        try:
+            self.driver.find_element_by_class_name('editor-post-taxonomies__hierarchical-terms-filter').send_keys(
+                organization)
+            self.driver.find_element_by_xpath(XPATH_ORGANIZATION_CHECKBOX).click()
+        except NoSuchElementException:
+            self.driver.find_element_by_xpath(XPATH_ORGANIZATION_LINK).click()
 
-        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, XPATH_ORGANIZATION_CLASS)))
-        self.driver.find_element_by_class_name(
-            'editor-post-taxonomies__hierarchical-terms-filter').send_keys(organization)
+            self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, XPATH_ORGANIZATION_CLASS)))
+            self.driver.find_element_by_class_name(
+                'editor-post-taxonomies__hierarchical-terms-filter').send_keys(organization)
 
-        self.driver.find_element_by_xpath(XPATH_ORGANIZATION_CHECKBOX).click()
+            self.driver.find_element_by_xpath(XPATH_ORGANIZATION_CHECKBOX).click()
         print('Organizers checkbox: clicked.')
 
         # Изображение записи
         self.driver.find_element_by_xpath(XPATH_IMG_LINK).click()
 
         # Отрывок
-        self.driver.find_element_by_xpath(XPATH_DESCRIPTION_LINK).click()
-        self.driver.find_element_by_class_name('components-textarea-control__input').send_keys(description)
+        try:
+            self.driver.find_element_by_class_name('components-textarea-control__input').send_keys(description)
+        except NoSuchElementException:
+            self.driver.find_element_by_xpath(XPATH_DESCRIPTION_LINK).click()
+            self.driver.find_element_by_class_name('components-textarea-control__input').send_keys(description)
         print('Add description: done.')
 
     def add_title(self, title):
@@ -81,7 +93,7 @@ class AddNewEvent(RedDawnSite):
         self.driver.find_element_by_class_name('editor-post-title__input').send_keys(f'[Игра] {title}')
         print('Add title: done.')
 
-    def add_date(self, date_start, date_end):
+    def add_date(self, date_start, date_end, time_start, time_end, color):
         sleep(5)
         date_end_split = date_end.split('-')
         for date in self.driver.find_elements_by_class_name('fc-day'):
@@ -90,19 +102,41 @@ class AddNewEvent(RedDawnSite):
 
         self.driver.find_element_by_class_name('fc_allday').click()
 
+        self.driver.find_element_by_class_name('fc_start_time').send_keys(time_start)
+
         self.driver.find_element_by_class_name('fc_end').click()
         for check_date in self.driver.find_elements_by_class_name('xdsoft_date'):
             if int(check_date.get_attribute('data-date')) == int(date_end_split[2]) and int(
                     check_date.get_attribute('data-month')) == int(date_end_split[1]) - 1 and int(
-                    check_date.get_attribute('data-year')) == int(date_end_split[0]):
+                check_date.get_attribute('data-year')) == int(date_end_split[0]):
                 check_date.click()
                 break
+        self.driver.find_element_by_class_name('fc_end_time').send_keys(time_end)
+
+        print('Entered data into date fields.')
+
+        self.driver.find_element_by_xpath(XPATH_COLOR_TAB).click()
+
+        self.driver.find_element_by_class_name('fc_color').click()
+        self.driver.find_element_by_class_name('fc_color').send_keys(Keys.CONTROL, 'a')
+        self.driver.find_element_by_class_name('fc_color').send_keys(Keys.DELETE)
+
+        self.driver.find_element_by_class_name('fc_color').send_keys(color)
+        print('Color selected successfully')
+        self.driver.find_element_by_class_name('fc-dg-ok').click()
+
         print('Add date: done.')
 
     def save(self):
         self.driver.find_element_by_xpath(XPATH_PUBLISH_BUTTON).click()
         self.driver.find_element_by_xpath(XPATH_PUBLISH_SUBMIT_BUTTON).click()
         print('Everything saved!')
+
+    def next_add(self):
+        sleep(5)
+        self.driver.back()
+        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'page-title-action')))
+        self.driver.find_element_by_class_name('page-title-action').click()
 
     def close_session(self):
         self.driver.quit()
