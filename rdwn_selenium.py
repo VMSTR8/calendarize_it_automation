@@ -1,3 +1,5 @@
+from time import sleep
+
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -20,7 +22,7 @@ class RedDawnSite:
         self.options = Options()
 
         while True:
-            user_input = str(input('Should I open browser? (y/n): ') or 'n')
+            user_input = str(input('Should I open browser? (y/n): ') or 'y')
             if user_input.lower() not in ('y', 'n'):
                 print(f'{user_input} — incorrect input. You should type "y for YES or "n" for NO')
             elif user_input.lower() == 'y':
@@ -41,6 +43,7 @@ class AddNewEvent(RedDawnSite):
         self.driver.get(self.rdwn)
         self.driver.find_element_by_class_name('dashicons-calendarize-it').click()
         self.driver.find_element_by_class_name('page-title-action').click()
+        print('Go to calendar: done.')
 
     def expand_and_add_taxonomy(self, permanent_link, organization, description):
         # Постоянная ссылка
@@ -53,6 +56,7 @@ class AddNewEvent(RedDawnSite):
 
         self.driver.find_element_by_class_name('components-text-control__input').send_keys(
             translit(permanent_link, 'ru', reversed=True))
+        print('Add permanent link: done.')
 
         # Организаторы
         self.driver.find_element_by_xpath(XPATH_ORGANIZATION_LINK).click()
@@ -62,6 +66,7 @@ class AddNewEvent(RedDawnSite):
             'editor-post-taxonomies__hierarchical-terms-filter').send_keys(organization)
 
         self.driver.find_element_by_xpath(XPATH_ORGANIZATION_CHECKBOX).click()
+        print('Organizers checkbox: clicked.')
 
         # Изображение записи
         self.driver.find_element_by_xpath(XPATH_IMG_LINK).click()
@@ -69,17 +74,36 @@ class AddNewEvent(RedDawnSite):
         # Отрывок
         self.driver.find_element_by_xpath(XPATH_DESCRIPTION_LINK).click()
         self.driver.find_element_by_class_name('components-textarea-control__input').send_keys(description)
+        print('Add description: done.')
 
     def add_title(self, title):
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'editor-post-title__input')))
         self.driver.find_element_by_class_name('editor-post-title__input').send_keys(f'[Игра] {title}')
+        print('Add title: done.')
 
-    def add_date(self):
-        pass
+    def add_date(self, date_start, date_end):
+        sleep(5)
+        date_end_split = date_end.split('-')
+        for date in self.driver.find_elements_by_class_name('fc-day'):
+            if date.get_attribute('data-date') == date_start:
+                date.click()
+
+        self.driver.find_element_by_class_name('fc_allday').click()
+
+        self.driver.find_element_by_class_name('fc_end').click()
+        for check_date in self.driver.find_elements_by_class_name('xdsoft_date'):
+            if int(check_date.get_attribute('data-date')) == int(date_end_split[2]) and int(
+                    check_date.get_attribute('data-month')) == int(date_end_split[1]) - 1 and int(
+                    check_date.get_attribute('data-year')) == int(date_end_split[0]):
+                check_date.click()
+                break
+        print('Add date: done.')
 
     def save(self):
         self.driver.find_element_by_xpath(XPATH_PUBLISH_BUTTON).click()
         self.driver.find_element_by_xpath(XPATH_PUBLISH_SUBMIT_BUTTON).click()
+        print('Everything saved!')
 
     def close_session(self):
         self.driver.quit()
+        print('Session closed.')
