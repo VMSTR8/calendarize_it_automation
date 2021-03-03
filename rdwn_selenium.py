@@ -1,9 +1,15 @@
-from time import sleep
-
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 
-from secrets import DRIVER_PATH, PROFILE_PATH, LOGIN, PASSWORD, RDWN_ADMIN
+from transliterate import translit
+
+from secrets import DRIVER_PATH, PROFILE_PATH, RDWN_ADMIN
+from xpath import *
 
 
 class RedDawnSite:
@@ -11,8 +17,6 @@ class RedDawnSite:
     def __init__(self):
 
         self.rdwn = RDWN_ADMIN
-        self.login = LOGIN
-        self.password = PASSWORD
         self.profile = webdriver.FirefoxProfile(PROFILE_PATH)
         self.options = Options()
 
@@ -29,6 +33,8 @@ class RedDawnSite:
                     options=self.options, firefox_profile=self.profile, executable_path=DRIVER_PATH)
                 break
 
+        self.wait = WebDriverWait(self.driver, 10)
+
 
 class AddNewEvent(RedDawnSite):
 
@@ -37,28 +43,42 @@ class AddNewEvent(RedDawnSite):
         self.driver.find_element_by_class_name('dashicons-calendarize-it').click()
         self.driver.find_element_by_class_name('page-title-action').click()
 
-    def expand_and_add_taxonomy(self, organization):
-        sleep(5)
+    def expand_and_add_taxonomy(self, permanent_link, organization, description):
         # Постоянная ссылка
-        self.driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/div['
-                                          '1]/div/div[1]/div[2]/div[2]/div/div[3]/div[3]/h2/button').click()
+        self.wait.until(EC.presence_of_element_located((By.XPATH, XPATH_ENTIRE_EVENT_BLOCK)))
+        self.driver.find_element_by_xpath(XPATH_PERMANENT_LINK).click()
+
+        ActionChains(self.driver).double_click(on_element=self.driver.find_element_by_class_name(
+            'components-text-control__input')).send_keys(Keys.DELETE).perform()
+
+        self.driver.find_element_by_class_name('components-text-control__input').send_keys(
+            translit(permanent_link, 'ru', reversed=True))
 
         # Организаторы
-        self.driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/div['
-                                          '1]/div/div[1]/div[2]/div[2]/div/div[3]/div[4]/h2/button').click()
+        self.driver.find_element_by_xpath(XPATH_ORGANIZATION_LINK).click()
 
+        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, XPATH_ORGANIZATION_CLASS)))
+        self.driver.find_element_by_class_name(
+            'editor-post-taxonomies__hierarchical-terms-filter').send_keys(organization)
+
+        self.driver.find_element_by_xpath(XPATH_ORGANIZATION_CHECKBOX).click()
 
         # Изображение записи
-        self.driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/div['
-                                          '1]/div/div[1]/div[2]/div[2]/div/div[3]/div[6]/h2/button').click()
+        self.driver.find_element_by_xpath(XPATH_IMG_LINK).click()
 
         # Отрывок
-        self.driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[2]/div[1]/div[3]/div[1]/div/div/div['
-                                          '1]/div/div[1]/div[2]/div[2]/div/div[3]/div[7]/h2/button').click()
+        self.driver.find_element_by_xpath(XPATH_DESCRIPTION_LINK).click()
+        self.driver.find_element_by_class_name('components-textarea-control__input').send_keys(description)
 
     def add_title(self, title):
-        sleep(5)
-        self.driver.find_element_by_class_name('editor-post-title__input').send_keys(title)
+        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'editor-post-title__input')))
+        self.driver.find_element_by_class_name('editor-post-title__input').send_keys(f'[Игра] {title}')
+
+    def add_date(self):
+        pass
+
+    def save(self):
+        pass
 
     def close_session(self):
         self.driver.quit()
