@@ -1,3 +1,4 @@
+import time
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -21,7 +22,7 @@ class RedDawnSite:
         self.options = Options()
 
         while True:
-            user_input = str(input('Should I open browser? (y/n): '))
+            user_input = str(input('Should I open browser? (y/n): ') or 'n')
             if user_input.lower() not in ('y', 'n'):
                 print(f'{user_input} — incorrect input. You should type "y for YES or "n" for NO')
             elif user_input.lower() == 'y':
@@ -48,8 +49,9 @@ class AddNewEvent(RedDawnSite):
         self.wait.until(EC.presence_of_element_located((By.XPATH, XPATH_ENTIRE_EVENT_BLOCK)))
         self.driver.find_element_by_xpath(XPATH_PERMANENT_LINK).click()
 
-        ActionChains(self.driver).double_click(on_element=self.driver.find_element_by_class_name(
-            'components-text-control__input')).send_keys(Keys.DELETE).perform()
+        self.driver.find_element_by_class_name('components-text-control__input').click()
+        self.driver.find_element_by_class_name('components-text-control__input').send_keys(Keys.CONTROL, 'a')
+        self.driver.find_element_by_class_name('components-text-control__input').send_keys(Keys.DELETE)
 
         self.driver.find_element_by_class_name('components-text-control__input').send_keys(
             translit(permanent_link, 'ru', reversed=True))
@@ -78,7 +80,8 @@ class AddNewEvent(RedDawnSite):
         pass
 
     def save(self):
-        pass
+        self.driver.find_element_by_xpath(XPATH_PUBLISH_BUTTON).click()
+        self.driver.find_element_by_xpath(XPATH_PUBLISH_SUBMIT_BUTTON).click()
 
     def close_session(self):
         self.driver.quit()
