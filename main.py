@@ -13,4 +13,5 @@ if __name__ == '__main__':
                                                  file[i]['organization'],
                                                  file[i]['description'])
             calendar_app.add_title(file[i]['title'])
+    calendar_app.save()
     calendar_app.close_session()
